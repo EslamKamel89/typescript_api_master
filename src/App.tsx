@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { ReactNode, useEffect, useState } from "react";
 import fetchingImg from "./assets/data-fetching.png";
 import BlogPosts, { BlogPost } from "./components/BlogPosts";
 import { get } from "./util/http";
@@ -11,9 +11,11 @@ type RawDataBlogPost = {
 
 function App() {
   const [fetchedPosts, setFetchedPosts] = useState<BlogPost[]>();
+  const [loading, setLoading] = useState<boolean>(false);
 
   useEffect(() => {
     async function fetchPost() {
+      setLoading(true);
       const data: RawDataBlogPost[] = (await get(
         "https://jsonplaceholder.typicode.com/posts"
       )) as RawDataBlogPost[];
@@ -23,14 +25,21 @@ function App() {
         text: rawPost.body,
       }));
       setFetchedPosts(blogPosts);
+      setLoading(false);
     }
     fetchPost();
     return () => {};
   }, []);
+  let content: ReactNode;
+  if (fetchedPosts) {
+    content = <BlogPosts posts={fetchedPosts}></BlogPosts>;
+  } else if (loading) {
+    content = <p id="loading-fallback">Loading data ...........</p>;
+  }
   return (
     <main>
       <img src={fetchingImg} />
-      <BlogPosts posts={fetchedPosts ?? []}></BlogPosts>
+      {content}
     </main>
   );
 }
